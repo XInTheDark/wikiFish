@@ -19,7 +19,7 @@ SAVE = True
 
 FILENAME = ''
 
-def construct(start, depth=5):
+def construct(start, depth=5, algo='bfs'):
     """Constrct a tree of links, starting from a given link, using DFS.
 
     @param start: The link to start from.
@@ -31,9 +31,16 @@ def construct(start, depth=5):
 
     FILENAME = 'adj_{}_{}_{}.txt'.format(start.split('/')[-1], depth, time.strftime('%d-%m-%y_%H_%M'))
     
-    dfs(start, depth)
+    # construct the tree
+    print(f"Using algorithm {algo}")
+    if algo.lower() == 'dfs':
+        dfs(start, depth)
+    elif algo.lower() == 'bfs':
+        bfs(start, depth)
+    else:
+        raise ValueError('Invalid algorithm (dfs or bfs)')
 
-    # Completed
+    # --- Completed ---
 
     # save as filename: adj/ adj_{start}_{depth}_{time (dd-mm-yy_hh_mm)}.txt
     if SAVE:
@@ -56,8 +63,7 @@ def dfs(article, d):
     # Save every time the number of nodes doubles
     if SAVE and nodes >= prev_nodes * 2:
         print("Nodes: {}".format(nodes))
-        filename = FILENAME
-        save_adj(str(adj), filename)
+        save_adj(str(adj), FILENAME)
         prev_nodes = nodes
 
     # Fetch the links
@@ -73,6 +79,37 @@ def dfs(article, d):
     for link in links:
         dfs(link, d - 1)
         nodes += 1
+
+
+# BFS
+def bfs(start, depth):
+    global visited, adj, nodes, nodes_limit, prev_nodes
+
+    visited = set()
+    q = [(start, 0)]
+    while len(q) > 0:
+        article, d = q.pop(0)
+        visited.add(article)
+        if d > depth:
+            break
+
+        if article not in adj:
+            adj[article] = []
+        links = fetch_links(article)
+
+        for link in links:
+            if link not in visited:
+                adj[article].append(link)
+                q.append((link, d + 1))
+                nodes += 1
+        if SAVE and nodes >= prev_nodes * 2:
+            print('Nodes: {}'.format(nodes))
+            save_adj(str(adj), FILENAME)
+            prev_nodes = nodes
+
+        if nodes >= nodes_limit:
+            break
+
         
 def get_adj(start, depth):
     # try to load from file
