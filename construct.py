@@ -1,46 +1,64 @@
 from fetch_links import fetch_links
 import os
+import time
+import atexit
 
 adj = {}  # adjacency list
 visited = set()
 nodes = 0
+prev_nodes = 0
 
 # constants
-limit = 1<<8
+limit = 1<<10
 # adjust limit to get more links per generation. This does not slow down the generation at all.
 # However, the actual path-finding algorithm (time complexity O(N)) will be slower.
 # So use this variable to create a balance between quantity and speed.
 
-nodes_limit = 1<<10
+nodes_limit = 1<<20
+SAVE = True
 
-def construct(start, depth=5, save=True):
+FILENAME = ''
+
+def construct(start, depth=5):
     """Constrct a tree of links, starting from a given link, using DFS.
 
     @param start: The link to start from.
     @param depth: The maximum depth of the tree to construct.
     """
-    global visited
+    global visited, FILENAME
     # Initialize the set of visited links
     visited = set()
+
+    FILENAME = 'adj_{}_{}_{}.txt'.format(start.split('/')[-1], depth, time.strftime('%d-%m-%y_%H_%M'))
     
     dfs(start, depth)
 
-    # save as filename: adj/ adj_{start}_{depth}.txt
-    if save:
-        # create dir adj if it doesn't exist
-        if not os.path.exists('adj'):
-            os.mkdir('adj')
-        filename = 'adj_{}_{}.txt'.format(start.split('/')[-1], depth)
-        with open(os.path.join('adj', filename), 'w') as f:
-            f.write(str(adj))
+    # Completed
+
+    # save as filename: adj/ adj_{start}_{depth}_{time (dd-mm-yy_hh_mm)}.txt
+    if SAVE:
+        # delete the old file
+        if os.path.exists(FILENAME):
+            os.remove(FILENAME)
+
+        FILENAME = 'adj_{}_{}_{}.txt'.format(start.split('/')[-1], depth, time.strftime('%d-%m-%y_%H_%M'))
+        save_adj(str(adj), FILENAME)
+        
 
 # DFS
 def dfs(article, d):
     """DFS from a given article."""
-    global adj, nodes, visited, limit, nodes_limit
+    global adj, nodes, visited, limit, nodes_limit, prev_nodes
 
     if d <= 0 or nodes >= nodes_limit or article in visited:
         return
+    
+    # Save every time the number of nodes doubles
+    if SAVE and nodes >= prev_nodes * 2:
+        print("Nodes: {}".format(nodes))
+        filename = FILENAME
+        save_adj(str(adj), filename)
+        prev_nodes = nodes
 
     # Fetch the links
     links = fetch_links(article, limit=limit)
@@ -66,10 +84,26 @@ def get_adj(start, depth):
         construct(start, depth, save=True)
         return adj
         
-        
+
+def save_adj(s, filename):
+    # create dir adj if it doesn't exist
+    if not os.path.exists('adj'):
+        os.mkdir('adj')
+    with open(os.path.join('adj', filename), 'w') as f:
+        f.write(s)
+
+@atexit.register
+def on_exit():
+    global adj, FILENAME
+    if SAVE:
+        save_adj(str(adj), FILENAME)
+        print('Saved to {}'.format(FILENAME))
+
+
 if __name__ == '__main__':
-    construct('https://en.wikipedia.org/wiki/Artificial_intelligence')
-    print(adj)
+    start = input('> ')
+    depth = int(input('Depth > '))
+    construct(start, depth)
     print(len(adj))
     print(nodes)
     
