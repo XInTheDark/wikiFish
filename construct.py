@@ -83,7 +83,19 @@ def get_adj(start, depth):
     except FileNotFoundError:
         construct(start, depth, save=True)
         return adj
-        
+
+
+def load_adj(filename):
+    prefix = ['adj/', '', 'adj/public/', 'adj/test/', '/']
+    suffix = ['', '.txt']
+    for i in prefix:
+        for j in suffix:
+            try:
+                with open(i + filename + j, 'r') as f:
+                    return eval(f.read())
+            except FileNotFoundError:
+                continue
+    
 
 def save_adj(s, filename):
     # create dir adj if it doesn't exist

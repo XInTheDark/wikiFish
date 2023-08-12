@@ -1,7 +1,12 @@
 import construct
-def find_path(start, end):
+def find_path(start, end, file=None):
     """Find the shortest path between two articles."""
-    adj = construct.get_adj(start, 5)
+    adj = None
+    if file is None:
+        adj = construct.get_adj(start, 5)
+    else:
+        construct.SAVE = False
+        adj = construct.load_adj(file)
     
     # BFS - O(V + E)
     visited = set()
@@ -21,7 +26,8 @@ def find_path(start, end):
     return None
 
 if __name__ == '__main__':
+    file = input('File > ')
     start = input('Start > ')
     end = input('End > ')
-    path = find_path(start, end)
+    path = find_path(start, end, file)
     print(path)
