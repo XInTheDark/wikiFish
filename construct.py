@@ -20,6 +20,9 @@ SAVE = True
 
 FILENAME = ''
 
+# BFS only
+q = []
+
 def construct(start, depth=5, algo='bfs'):
     """Constrct a tree of links, starting from a given link, using DFS.
 
@@ -84,7 +87,7 @@ def dfs(article, d):
 
 # BFS
 def bfs(start, depth):
-    global visited, adj, nodes, nodes_limit, prev_nodes
+    global visited, adj, nodes, nodes_limit, prev_nodes, q
 
     visited = set()
     q = [(start, 0)]
@@ -131,6 +134,10 @@ def on_exit():
         save_adj(str(adj), FILENAME)
         print('Saved to {}'.format(FILENAME))
         print('Total nodes: {}'.format(nodes))
+
+        if len(q) > 0:
+            # save queue
+            save_adj(str(q), 'q_{}.txt'.format(FILENAME))
 
 
 if __name__ == '__main__':
