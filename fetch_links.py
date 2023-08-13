@@ -28,6 +28,8 @@ def fetch_links(article, search_arr=None, limit=50):
     """
     if search_arr is None:
         search_arr = []
+
+    article = Lengthen(article)
         
     # Fetch the article
     res = requests.get(article)
@@ -42,7 +44,7 @@ def fetch_links(article, search_arr=None, limit=50):
     links = [link for link in links if link.has_attr('href') and link['href'].startswith('/wiki/')]
     
     # find all links that are in the search_arr
-    find_links = [link for link in links if P(link['href']) in search_arr]
+    find_links = [link for link in links if Shorten(link['href']) in search_arr]
     
     if len(find_links) > 0:
         return find_links
@@ -51,8 +53,8 @@ def fetch_links(article, search_arr=None, limit=50):
     
     links = [link for link in links if not any(x in link['href'] for x in BANNED)]
     
-    # Convert to absolute links
-    links = [P(link['href']) for link in links]
+    # Convert to shortened format
+    links = [Shorten(link['href']) for link in links]
     
     # Return the first few links
     return links[:limit]
@@ -60,12 +62,17 @@ def fetch_links(article, search_arr=None, limit=50):
 def test():
     print(fetch_links('https://en.wikipedia.org/wiki/Artificial_intelligence'))
     
-def P(x):
-    """process href url into wiki url."""
+def Shorten(x):
+    return(x.split('/')[-1])
+
+def Lengthen(x):
+    """process shortened url into wiki url."""
     # check if already a url
-    if not x.startswith('/wiki/'):
-        return None
-    return 'https://en.wikipedia.org' + x
+    if x.startswith('/wiki/'):
+        return 'https://en.wikipedia.org' + x
+    elif "/" not in x:
+        return 'https://en.wikipedia.org/wiki/' + x
+    return x
 
 if __name__ == '__main__':
     test()

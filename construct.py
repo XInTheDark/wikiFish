@@ -1,7 +1,8 @@
-from fetch_links import fetch_links
+from fetch_links import *
 import os
 import time
 import atexit
+from utils import *
 
 adj = {}  # adjacency list
 visited = set()
@@ -29,7 +30,7 @@ def construct(start, depth=5, algo='bfs'):
     # Initialize the set of visited links
     visited = set()
 
-    FILENAME = 'adj_{}_{}_{}.txt'.format(start.split('/')[-1], depth, time.strftime('%d-%m-%y_%H_%M'))
+    FILENAME = 'adj_{}_{}_{}.txt'.format(start, depth, time.strftime('%d-%m-%y_%H_%M'))
     
     # construct the tree
     print(f"Using algorithm {algo}")
@@ -48,7 +49,7 @@ def construct(start, depth=5, algo='bfs'):
         if os.path.exists(FILENAME):
             os.remove(FILENAME)
 
-        FILENAME = 'adj_{}_{}_{}.txt'.format(start.split('/')[-1], depth, time.strftime('%d-%m-%y_%H_%M'))
+        FILENAME = 'adj_{}_{}_{}.txt'.format(start, depth, time.strftime('%d-%m-%y_%H_%M'))
         save_adj(str(adj), FILENAME)
         
 
@@ -102,6 +103,7 @@ def bfs(start, depth):
                 adj[article].append(link)
                 q.append((link, d + 1))
                 nodes += 1
+                
         if SAVE and nodes >= prev_nodes * 2:
             print('Nodes: {}'.format(nodes))
             save_adj(str(adj), FILENAME)
@@ -110,10 +112,10 @@ def bfs(start, depth):
         if nodes >= nodes_limit:
             break
 
-        
+
 def get_adj(start, depth):
     # try to load from file
-    filename = 'adj_{}_{}.txt'.format(start.split('/')[-1], depth)
+    filename = 'adj_{}_{}.txt'.format(start, depth)
     try:
         with open(os.path.join('adj', filename), 'r') as f:
             return eval(f.read())
@@ -122,36 +124,23 @@ def get_adj(start, depth):
         return adj
 
 
-def load_adj(filename):
-    prefix = ['adj/', '', 'adj/public/', 'adj/test/', '/']
-    suffix = ['', '.txt']
-    for i in prefix:
-        for j in suffix:
-            try:
-                with open(i + filename + j, 'r') as f:
-                    return eval(f.read())
-            except FileNotFoundError:
-                continue
-    
-
-def save_adj(s, filename):
-    # create dir adj if it doesn't exist
-    if not os.path.exists('adj'):
-        os.mkdir('adj')
-    with open(os.path.join('adj', filename), 'w') as f:
-        f.write(s)
-
 @atexit.register
 def on_exit():
     global adj, FILENAME
     if SAVE:
         save_adj(str(adj), FILENAME)
         print('Saved to {}'.format(FILENAME))
+        print('Total nodes: {}'.format(nodes))
 
 
 if __name__ == '__main__':
     start = input('> ')
     depth = int(input('Depth > '))
+    nodes_limit = input('Nodes limit > ')
+    nodes_limit = int(nodes_limit) if nodes_limit != '' else 1<<20
+
+    start = Shorten(start)
+
     construct(start, depth)
     print(len(adj))
     print(nodes)
