@@ -25,3 +25,6 @@ def get_nodes(filename):
     for key, value in adj.items():
         l += len(value)
     return l
+
+def from_natural_language(x):
+    return x.replace(' ', '_')

@@ -32,7 +32,9 @@ if __name__ == '__main__':
     file = input('File > ')
     start = input('Start > ')
     end = input('End > ')
+    
     start = Shorten(start)
+    start = from_natural_language(start)
     end = Shorten(end)
 
     path = find_path(start, end, file)
