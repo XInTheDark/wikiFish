@@ -10,18 +10,20 @@ nodes = 0
 prev_nodes = 0
 
 # constants
-limit = 1<<10
-# adjust limit to get more links per generation. This does not slow down the generation at all.
-# However, the actual path-finding algorithm (time complexity O(N)) will be slower.
-# So use this variable to create a balance between quantity and speed.
+limit = 1<<6
+# adjust limit to get more links per generation. 
+# Increasing this will result in wider, but shallower, trees.
 
 nodes_limit = 1<<20
 SAVE = True
 
 FILENAME = ''
+FOLDER = ''
 
 # BFS only
 q = []
+
+start_time = time.time()
 
 def construct(start, depth=5, algo='bfs'):
     """Constrct a tree of links, starting from a given link, using DFS.
@@ -29,12 +31,19 @@ def construct(start, depth=5, algo='bfs'):
     @param start: The link to start from.
     @param depth: The maximum depth of the tree to construct.
     """
-    global visited, FILENAME
+    global visited, FILENAME, FOLDER
     # Initialize the set of visited links
     visited = set()
 
     FILENAME = 'adj_{}_{}_{}.txt'.format(start, depth, time.strftime('%d-%m-%y_%H_%M'))
-    
+    FOLDER = '{}_{}_{}'.format(start, depth, time.strftime('%d-%m-%y_%H_%M'))
+    if SAVE:
+        # create dir adj if it doesn't exist
+        if not os.path.exists('adj'):
+            os.mkdir('adj')
+        if not os.path.exists(os.path.join('adj', FOLDER)):
+            os.mkdir(os.path.join('adj', FOLDER))
+
     # construct the tree
     print(f"Using algorithm {algo}")
     if algo.lower() == 'dfs':
@@ -53,7 +62,9 @@ def construct(start, depth=5, algo='bfs'):
             os.remove(FILENAME)
 
         FILENAME = 'adj_{}_{}_{}.txt'.format(start, depth, time.strftime('%d-%m-%y_%H_%M'))
-        save_adj(str(adj), FILENAME)
+        save_adj(str(adj), FOLDER, FILENAME)
+        print('Saved to {}'.format(FILENAME))
+        print('Nodes: {} / Time: {}'.format(nodes, elapsed_time(start_time)))
         
 
 # DFS
@@ -66,8 +77,8 @@ def dfs(article, d):
     
     # Save every time the number of nodes doubles
     if SAVE and nodes >= prev_nodes * 2:
-        print("Nodes: {}".format(nodes))
-        save_adj(str(adj), FILENAME)
+        print("Nodes: {} / Time: {}".format(nodes, elapsed_time(start_time)))
+        save_adj(str(adj), FOLDER, FILENAME)
         prev_nodes = nodes
 
     # Fetch the links
@@ -108,8 +119,8 @@ def bfs(start, depth):
                 nodes += 1
                 
         if SAVE and nodes >= prev_nodes * 2:
-            print('Nodes: {}'.format(nodes))
-            save_adj(str(adj), FILENAME)
+            print('Nodes: {} / Time: {}'.format(nodes, elapsed_time(start_time)))
+            save_adj(str(adj), FOLDER, FILENAME)
             prev_nodes = nodes
 
         if nodes >= nodes_limit:
@@ -131,13 +142,17 @@ def get_adj(start, depth):
 def on_exit():
     global adj, FILENAME
     if SAVE:
-        save_adj(str(adj), FILENAME)
+        save_adj(str(adj), FOLDER, FILENAME)
         print('Saved to {}'.format(FILENAME))
-        print('Total nodes: {}'.format(nodes))
+        print('Total nodes: {} / Time: {}'.format(nodes, elapsed_time(start_time)))
 
-        if len(q) > 0:
+        if len(q) > 0 and nodes < nodes_limit:
             # save queue
-            save_adj(str(q), 'q_{}.txt'.format(FILENAME))
+            save_adj(str(q), FOLDER, 'q_{}.txt'.format(FILENAME))
+            print('Saved queue to q_{}.txt'.format(FILENAME))
+            # save visited
+            save_adj(str(visited), FOLDER, 'visited_{}.txt'.format(FILENAME))
+            print('Saved visited to visited_{}.txt'.format(FILENAME))
 
 
 if __name__ == '__main__':

@@ -1,4 +1,5 @@
 import os
+import time
 
 def load_adj(filename):
     prefix = ['adj/', '', 'adj/public/', 'adj/test/', '/']
@@ -11,11 +12,14 @@ def load_adj(filename):
             except FileNotFoundError:
                 continue
 
-def save_adj(s, filename):
-    # create dir adj if it doesn't exist
+def save_adj(s, folder, filename):
+    # create dir if it doesn't exist
     if not os.path.exists('adj'):
         os.mkdir('adj')
-    with open(os.path.join('adj', filename), 'w') as f:
+    if not os.path.exists(os.path.join('adj', folder)):
+        os.mkdir(os.path.join('adj', folder))
+
+    with open(os.path.join('adj', folder, filename), 'w') as f:
         f.write(s)
 
 
@@ -28,3 +32,7 @@ def get_nodes(filename):
 
 def from_natural_language(x):
     return x.replace(' ', '_')
+
+def elapsed_time(start):
+    """Elapsed time in milliseconds."""
+    return int( (time.time() - start) * 1000 )
